@@ -7,10 +7,34 @@ from api.models import Employee
 from api.serializers import EmployeeSerializer, HRDashboardSerializer
 from rest_framework import permissions
 
+
 class EmployeeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        try:
+            is_many = isinstance(request.data, list)
+            print(f"user is {request.user}")
+            request.data['hr'] = request.user.id
+            print(request.data)
+            if not is_many:
+                serializer = self.get_serializer(data=request.data, many=False)
+            else:
+                serializer = self.get_serializer(data=request.data, many=True)
+            if serializer.is_valid():
+                self.perform_create(serializer)
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            else:
+                emessage = serializer.errors
+                return Response(emessage, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({"server_error": e}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class HRDashboardViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -33,4 +57,3 @@ class CustomLoginView(ObtainJSONWebToken):
             return Response(error_message, status=status.HTTP_400_BAD_REQUEST)
 
         return super().post(request, *args, **kwargs)
-

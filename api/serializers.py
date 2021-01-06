@@ -17,6 +17,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 
 class HRDashboardSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = '__all__'
